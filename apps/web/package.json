@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "start": "next start --hostname 0.0.0.0"
   },
   "dependencies": {
     "@civic-registry/api": "workspace:*",
@@ -14,7 +15,7 @@
     "@civic-registry/core": "workspace:*",
     "@civic-registry/database": "workspace:*",
     "@civic-registry/registry": "workspace:*",
-    "next": "16.3.8",
+    "next": "16.4.6",
     "pg": "^8.16.3",
     "react": "19.2.0",
     "react-dom": "19.2.0",
@@ -27,7 +28,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",
-    "eslint-config-next": "16.3.8",
+    "eslint-config-next": "16.4.6",
     "typescript": "^5.9.0"
   }
 }

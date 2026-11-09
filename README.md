@@ -52,8 +52,17 @@ Then visit `http://localhost:3000`.
 Run all quality gates with:
 
 ```bash
-pnpm ci
+pnpm run ci
 ```
+
+Use `pnpm run ci` for the repository's complete quality gate; newer pnpm
+versions also reserve `pnpm ci` as a dependency-install command.
+
+## Render deployment
+
+The root `render.yaml` connects the Next.js app to PostgreSQL, generates an
+administrator token, and checks database readiness before routing traffic.
+See [Render operations](docs/RENDER.md) for setup, limitations, and recovery.
 
 Seed the generic example with:
 

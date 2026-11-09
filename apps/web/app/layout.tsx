@@ -21,6 +21,12 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <SiteHeader />
+        {process.env.CIVIC_REGISTRY_DEMO === "true" ? (
+          <aside className="demo-notice" aria-label="Demonstration data">
+            Demonstration registry · The bundled catalog contains fictional
+            example records, not an official government registry.
+          </aside>
+        ) : null}
         {children}
         <footer className="site-footer">
           <div>
