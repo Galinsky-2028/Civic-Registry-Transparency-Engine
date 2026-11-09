@@ -9,10 +9,15 @@ data feed. No downstream application or certification is claimed.
 1. Push `render.yaml` and the lockfile to `main`.
 2. Create a Blueprint from this repository. To repair the existing
    `civic-registry-preview-v2` service, review an **adopt** plan and verify that
-   it updates that service and creates only `civic-registry-db`.
-3. Apply the reviewed plan. Render generates the administrator token and
-   supplies the database's internal connection string. No secrets belong in Git.
-4. Monitor the deploy until live, then check `/api/ready`, browse the catalog,
+   it updates only that service. The Render workspace is at its resource cap;
+   the existing Neon Civic Registry project provides PostgreSQL.
+3. Set `DATABASE_URL` on the existing Render service from the Civic Registry
+   Neon project's `render-live` branch. Use a direct TLS connection because this
+   engine uses session advisory locks and session actor context. This secret is
+   managed on Render's Environment page, separately from Blueprint-owned keys;
+   Blueprint syncs preserve it. No secrets belong in Git.
+4. Apply the reviewed plan. Render generates the administrator token.
+5. Monitor the deploy until live, then check `/api/ready`, browse the catalog,
    search records, and check `/api/v1/registries` and the public export.
 
 Startup applies checksum-verified, advisory-locked migrations before Next.js
@@ -35,10 +40,12 @@ operator token. Identity-verified roles require downstream SSO/RBAC integration.
 
 ## Free plan limits
 
-The Blueprint selects free plans. Free web services sleep when idle and use
-ephemeral filesystems. Free Postgres expires after 30 days: upgrade it before
-expiry for continued use and arrange tested backups. The example requires no
-stored attachment files. Before enabling fetched PDF storage, attach a
+The Blueprint keeps the existing free Render web service, which sleeps when
+idle and uses an ephemeral filesystem. The database reuses the existing Neon
+project on its current account plan; normal Neon usage billing applies. The
+`render-live` compute is capped at 0.25 CU and suspends after five idle minutes.
+It does not have Render Free Postgres's 30-day expiry. Arrange tested backups
+and monitor database usage. The example requires no stored attachment files. Before enabling fetched PDF storage, attach a
 persistent disk on a compatible paid service and set
 `CIVIC_REGISTRY_DOCUMENT_STORAGE_DIR` to its mount, or implement durable object
 storage. Database metadata alone does not preserve files after a restart.
@@ -58,5 +65,5 @@ dedicated PostgreSQL database and must never target production.
 Failed migrations stop startup. Fix forward with a new migration; never edit
 an applied migration. An application rollback does not undo database changes.
 Before any data migration, export a backup and rehearse restoring it into a
-separate database. Restrict the database to internal connections as declared
-by `ipAllowList: []`.
+separate database. The Neon connection requires TLS; keep its credentials in
+Render secret environment variables and out of browsers, logs, and Git.
