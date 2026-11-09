@@ -2,14 +2,14 @@
   "repository": "neophilism/Civic-Registry-Transparency-Engine",
   "title": "Civic-Registry-Transparency-Engine",
   "planVerified": true,
-  "plannedPrCount": 22,
+  "plannedPrCount": 23,
   "sourceFiles": [
     "docs/DEVELOPMENT_PLAN.md",
     "docs/ROADMAP_STATUS.md"
   ],
   "scopeNote": "Explicit mapping from reviewed docs/ROADMAP_STATUS.md implementation evidence, not inferred from roadmap ordinals; historical status document remains a cited source.",
   "schemaVersion": 1,
-  "roadmapVersion": 2,
+  "roadmapVersion": 3,
   "observedAt": "2026-10-11T17:39:11.685Z",
   "units": [
     {
@@ -259,6 +259,21 @@
       "dependsOn": [],
       "externalDependencies": [],
       "externalPrerequisites": []
+    },
+    {
+      "id": "CRT-23",
+      "title": "Verified Render deployment and production startup",
+      "origin": "addition",
+      "prs": [
+        31
+      ],
+      "dependsOn": [
+        "CRT-04",
+        "CRT-05"
+      ],
+      "externalDependencies": [],
+      "externalPrerequisites": [],
+      "scope": "Owner-requested completion and deployment of the domain-neutral engine; reproducible builds, patched dependencies, database setup, readiness checks, generic example installation, and live verification."
     }
   ],
   "pullRequests": [

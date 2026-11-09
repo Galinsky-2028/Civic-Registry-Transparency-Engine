@@ -171,3 +171,21 @@ Read these current repository documents before coding; they may describe later i
 ## Recovery confidence
 
 **Full original numbered milestone sequence recovered**, with technical scope and acceptance expanded from available evidence. Precise verbatim wording and the present code→plan mapping still require a separate live reconciliation pass.
+
+## CRT-23 — Verified Render deployment and production startup
+
+Owner-requested on November 9, 2026. Complete the operational path for the
+domain-neutral engine: patched dependencies, committed lockfile, deterministic
+CI, database provisioning, migration startup, an explicit generic example
+installation, protected administration, database readiness, and a verified
+Render deployment. Canonical PR mapping lives only in `registry/prs.json`.
+
+Acceptance: run the existing quality gate against real PostgreSQL; test that
+first-run initialization is opt-in and later restarts preserve operator edits;
+verify catalog, search, exports, APIs, restricted admin routes, keyboard focus,
+and mobile layout in Chromium; review production dependency advisories;
+validate the Render plan; verify the deployed commit and healthy public URL.
+Document free-plan expiration, persistent attachment storage, optional email
+and scheduling integrations, and recovery. Independent human review remains
+deferred under the owner policy. Production use of real feeds is downstream
+scope, and fictional example data must remain clearly labeled.
