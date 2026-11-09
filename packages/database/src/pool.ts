@@ -21,6 +21,7 @@ export function createDatabasePool(
   const config: PoolConfig = {
     connectionString,
     max: options.max ?? 10,
+    connectionTimeoutMillis: 3000,
     application_name:
       options.applicationName ?? "civic-registry-transparency-engine",
   };

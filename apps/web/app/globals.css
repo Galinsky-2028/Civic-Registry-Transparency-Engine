@@ -29,6 +29,14 @@ body {
   background: var(--paper);
 }
 
+.demo-notice {
+  padding: 0.8rem 1rem;
+  background: var(--accent-soft);
+  color: var(--accent);
+  text-align: center;
+  font-size: 0.9rem;
+}
+
 a {
   color: var(--accent);
   text-decoration-thickness: 1px;

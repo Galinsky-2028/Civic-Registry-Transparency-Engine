@@ -22,7 +22,7 @@ jobs:
           command: sudo npm install --global pnpm@12.7.0
       - run:
           name: Install production and test dependencies
-          command: pnpm install --no-frozen-lockfile --allow-build=unrs-resolver
+          command: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
