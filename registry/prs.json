@@ -265,7 +265,8 @@
       "title": "Verified Render deployment and production startup",
       "origin": "addition",
       "prs": [
-        31
+        31,
+        32
       ],
       "dependsOn": [
         "CRT-04",
