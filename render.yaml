@@ -1,15 +1,18 @@
 services:
   - type: web
-    name: civic-registry-preview-v2
+    name: civic-registry-demo
     runtime: node
     plan: free
-    region: virginia
+    region: ohio
     repo: https://github.com/Galinsky-2028/Civic-Registry-Transparency-Engine
     branch: main
     buildCommand: npm install --global pnpm@12.7.0 && pnpm install --frozen-lockfile && pnpm build
     startCommand: pnpm start
     healthCheckPath: /api/ready
+    autoDeployTrigger: checksPass
     envVars:
+      - key: DATABASE_URL
+        sync: false
       - key: NODE_VERSION
         value: 24.21.0
       - key: NODE_ENV
