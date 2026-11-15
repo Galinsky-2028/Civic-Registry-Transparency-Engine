@@ -2,7 +2,7 @@
   "repository": "Galinsky-2028/Civic-Registry-Transparency-Engine",
   "title": "Civic-Registry-Transparency-Engine",
   "planVerified": true,
-  "plannedPrCount": 23,
+  "plannedPrCount": 24,
   "sourceFiles": [
     "docs/DEVELOPMENT_PLAN.md",
     "docs/ROADMAP_STATUS.md"
@@ -275,6 +275,21 @@
       "externalDependencies": [],
       "externalPrerequisites": [],
       "scope": "Owner-requested completion and deployment of the domain-neutral engine; reproducible builds, patched dependencies, database setup, readiness checks, generic example installation, and live verification."
+    },
+    {
+      "id": "CRT-24",
+      "title": "Upstream server-bound administrator principals and DNS-pinned source fetch",
+      "origin": "addition",
+      "prs": [
+        33
+      ],
+      "dependsOn": [
+        "CRT-15",
+        "CRT-20"
+      ],
+      "externalDependencies": [],
+      "externalPrerequisites": [],
+      "scope": "Owner-requested generalization of downstream-verified hardening: server-configured administrator principals with revocable signed sessions, deployment role separation, explicit review decisions, and DNS-pinned public source retrieval."
     }
   ],
   "pullRequests": [

@@ -189,3 +189,21 @@ Document free-plan expiration, persistent attachment storage, optional email
 and scheduling integrations, and recovery. Independent human review remains
 deferred under the owner policy. Production use of real feeds is downstream
 scope, and fictional example data must remain clearly labeled.
+
+## CRT-24 — Upstream server-bound administrator principals and DNS-pinned source fetch
+
+Owner-requested on November 15, 2026. Generalize the hardening verified in the
+Smart Cities downstream (SC-26) back into the engine without importing any
+Smart Cities domain code. Canonical PR mapping lives only in
+`registry/prs.json`.
+
+Acceptance: console identity and lifecycle roles come only from
+server-configured principals; sessions are signed with a separate secret and
+revoked by principal removal, role change, credential rotation or key
+rotation; the Render start path derives distinct editor, reviewer and
+publisher principals; approval decisions must be explicit and relationship
+review requires the reviewer role; source retrieval connects only to the
+DNS-validated public address with original TLS identity, rejects private and
+transition address forms, and bounds DNS time and response size. Unit tests
+cover each denial path. Independent human review remains deferred under the
+owner policy.
