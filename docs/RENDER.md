@@ -33,10 +33,16 @@ The HTTP query timeout and database connection timeout are three seconds.
 
 ## Operator access
 
-Retrieve `CIVIC_REGISTRY_ADMIN_TOKEN` on the service's Render Environment page
-and use it at `/admin/sign-in`. Keep it secret and rotate it there if exposed;
-rotation invalidates existing signed sessions. This console uses a shared
-operator token. Identity-verified roles require downstream SSO/RBAC integration.
+Render generates `CIVIC_REGISTRY_ADMIN_SESSION_SECRET` and three distinct role
+credentials: `CIVIC_REGISTRY_EDITOR_TOKEN`, `CIVIC_REGISTRY_REVIEWER_TOKEN`, and
+`CIVIC_REGISTRY_PUBLISHER_TOKEN`. `scripts/render-start.sh` converts the role
+credentials into server-side principal digests before Next.js starts. Retrieve
+a role credential privately from the service's Render Environment page and use
+it at `/admin/sign-in`; the form cannot choose an identity or roles. Rotating a
+credential or the session secret revokes existing sessions. For named
+operators, set `CIVIC_REGISTRY_ADMIN_PRINCIPALS` as described in
+[Administrator console](ADMIN-CONSOLE.md). `CIVIC_REGISTRY_ADMIN_TOKEN` is
+retired and ignored.
 
 ## Free plan limits
 

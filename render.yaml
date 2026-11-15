@@ -16,7 +16,13 @@ services:
         value: production
       - key: NEXT_TELEMETRY_DISABLED
         value: "1"
-      - key: CIVIC_REGISTRY_ADMIN_TOKEN
+      - key: CIVIC_REGISTRY_ADMIN_SESSION_SECRET
+        generateValue: true
+      - key: CIVIC_REGISTRY_EDITOR_TOKEN
+        generateValue: true
+      - key: CIVIC_REGISTRY_REVIEWER_TOKEN
+        generateValue: true
+      - key: CIVIC_REGISTRY_PUBLISHER_TOKEN
         generateValue: true
       - key: CIVIC_REGISTRY_SEED_GENERIC
         value: "true"

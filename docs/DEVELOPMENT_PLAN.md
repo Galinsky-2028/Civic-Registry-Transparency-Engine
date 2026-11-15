@@ -138,7 +138,7 @@ Reusable, domain-neutral registry and transparency infrastructure for configurab
 
 ### CRT-22 — Smart Cities Surveillance Registry reference
 
-- **Scope:** Originally reference thin app; subsequently explicitly separated into standalone neophilism/Smart-Cities-Surveillance-Registry.
+- **Scope:** Originally reference thin app; subsequently explicitly separated into standalone Galinsky-2028/Smart-Cities-Surveillance-Registry.
 - **Dependencies:** Prior data model, APIs, state transitions or provider integrations on which the feature depends; verify concrete dependency against current source.
 - **Acceptance:** Tests must cover normal authorized operation, invalid inputs, cross-role/tenant access denial, audit/provenance preservation, retries/duplicates where applicable, and at least one documented failure/recovery case. UI milestones require keyboard and screen reader checks. Never equate mocked fixture or document with real-world ingestion, compliance, or production.
 
