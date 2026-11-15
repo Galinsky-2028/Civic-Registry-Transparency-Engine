@@ -8,25 +8,37 @@ The public site and `/api/v1` remain disclosure-filtered, read-only
 surfaces. The administrator console is intentionally an internal view of
 canonical records and operational state.
 
-The console is disabled unless the server has:
+The console is disabled unless the server has a signing secret (at least 32
+characters) and a nonempty, valid `CIVIC_REGISTRY_ADMIN_PRINCIPALS` JSON array.
+Use a new `CIVIC_REGISTRY_ADMIN_SESSION_SECRET` for the signing key, separate from
+all operator credentials. `CIVIC_REGISTRY_ADMIN_TOKEN` is retired and ignored.
 
-```
-CIVIC_REGISTRY_ADMIN_TOKEN=<a long random secret>
-```
+Each principal contains `actorId`, `roles` (an array of lifecycle-role strings),
+and `tokenSha256` (the lowercase hex SHA-256 digest of that operator's token).
+Generate a distinct cryptographically random token of at least 32 bytes per
+operator, store its digest in server configuration, and deliver the token through
+your existing secret-management process. Never commit tokens, digests of actual
+credentials, or signing keys. Duplicate actors/digests and malformed configuration
+disable the built-in login rather than choosing an ambiguous identity.
 
-Operators sign in with that token plus an actor ID and lifecycle-role context.
-The token creates an HTTP-only, SameSite=Strict, signed session that expires
-after eight hours. The lifecycle service still evaluates every transition
-against the configured allowed/approver roles, but the built-in token flow does
-not independently verify a person's role claims. Treat possession of the token
-as administrator-level access. Deployments requiring per-user RBAC should put
-the console behind organization identity infrastructure and supply only
-identity-authorized role context.
+The form accepts only the operator token. It cannot choose actor ID or roles.
+Every session read revalidates the current server principal and its fingerprint;
+removing an operator, changing roles, rotating their credential, or rotating the
+signing key revokes their cookies. Legacy self-declared-role cookies are rejected.
+Cookies remain signed, HTTP-only, SameSite=Strict, secure in production, with an
+eight-hour expiry. Reconfiguration requires operators to sign in again.
 
-Production deployments should additionally place `/admin` behind their
-normal identity-aware proxy, SSO, VPN, or equivalent network/application
-access control. The built-in token is a portable engine-level guard, not a
-replacement for organization identity infrastructure.
+All configured principals are trusted **cross-registry console administrators**,
+including canonical record editing. Lifecycle roles constrain workflow transitions
+and approvals; they are not general per-tenant or read-only console permissions.
+Do not enroll tenant-limited users in this global administrator console. The public
+read-only API remains the disclosure-safe surface for unauthenticated users.
+
+A bounded per-process sign-in limiter permits 30 attempts per minute, including
+successful attempts, then recovers at the next window. Replicas/restarts have
+independent limits. Production ingress must additionally enforce distributed
+rate limits and organization SSO/VPN/proxy access. No deployment or identity-proxy
+configuration is claimed by this source change.
 
 ## Capabilities
 
@@ -51,7 +63,11 @@ domain/config validation and deadline reconciliation.
 
 ## Auditing
 
-The console supplies operator context to lifecycle and deadline services.\nRecord writes pass actor/reason context through the record repository on the\nsame PostgreSQL transaction that fires the immutable history trigger, so\nrecord revisions and audit events are attributed without relying on pooled\nconnection state.
+The console supplies operator context to lifecycle and deadline services.
+Record writes pass actor/reason context through the record repository on the
+same PostgreSQL transaction that fires the immutable history trigger, so
+record revisions and audit events are attributed without relying on pooled
+connection state.
 
 ## Deliberate exclusions
 
@@ -61,3 +77,19 @@ reviewable artifact. This avoids turning the administrator UI into a path for
 unreviewed schema/workflow changes.
 
 The console also does not expose or weaken the public API disclosure boundary.
+
+## Deployment role bootstrap and explicit decisions
+
+`scripts/render-start.sh` derives three server-bound principals from distinct
+editor, reviewer, and publisher tokens (`CIVIC_REGISTRY_EDITOR_TOKEN`,
+`CIVIC_REGISTRY_REVIEWER_TOKEN`, `CIVIC_REGISTRY_PUBLISHER_TOKEN`, each at least
+32 characters) using `scripts/admin-principals.mjs`. Only their SHA-256 digests
+reach the application. The signing secret is separate. Editor submits drafts,
+reviewer requests approval, and publisher approves the request and publishes;
+the requester-cannot-approve constraint remains enforced. For named operator
+identities, set the explicit `CIVIC_REGISTRY_ADMIN_PRINCIPALS` JSON array
+instead; it takes precedence over the role tokens.
+
+Approval and rejection forms require an explicit recognized decision; missing,
+misspelled, or forged values cannot default to approval. Relationship review
+also requires the server-bound reviewer role.
