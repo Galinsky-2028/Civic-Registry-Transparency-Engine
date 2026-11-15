@@ -6,19 +6,28 @@ data feed. No downstream application or certification is claimed.
 
 ## Deployment
 
-1. Push `render.yaml` and the lockfile to `main`.
-2. Create a Blueprint from this repository. To repair the existing
-   `civic-registry-preview-v2` service, review an **adopt** plan and verify that
-   it updates only that service. The Render workspace is at its resource cap;
-   the existing Neon Civic Registry project provides PostgreSQL.
-3. Set `DATABASE_URL` on the existing Render service from the Civic Registry
-   Neon project's `render-live` branch. Use a direct TLS connection because this
-   engine uses session advisory locks and session actor context. This secret is
-   managed on Render's Environment page, separately from Blueprint-owned keys;
-   Blueprint syncs preserve it. No secrets belong in Git.
-4. Apply the reviewed plan. Render generates the administrator token.
-5. Monitor the deploy until live, then check `/api/ready`, browse the catalog,
-   search records, and check `/api/v1/registries` and the public export.
+The live demonstration runs in the campaign Render workspace as the free web
+service `civic-registry-demo` (Ohio), at
+`https://civic-registry-demo.onrender.com`. PostgreSQL is the dedicated Neon
+project **Civic Registry** (AWS us-east-2) in the campaign Neon organization.
+Its default compute is capped at 0.25 CU and scales to zero when idle. An
+earlier `civic-registry-preview-v2` service and its Neon project belong to a
+different account and are not managed from this repository.
+
+To recreate or repair the service:
+
+1. Create a Neon project in the campaign organization (or reuse **Civic
+   Registry**) and copy its **direct** (non-pooler) connection string with
+   `sslmode=verify-full`. The engine uses session advisory locks and session
+   actor context, so do not use the PgBouncer pooler host.
+2. Create a free Render web service from this repository with the settings in
+   `render.yaml` (Node runtime, build and start commands, `/api/ready` health
+   check, deploy after checks pass). Set `DATABASE_URL` as a secret on the
+   service's Environment page; it is never committed. Let Render generate the
+   session secret and the three role credentials.
+3. Deploy, then confirm the deploy is `live`, the logs show migrations and
+   example installation, and `/api/ready` passes. Browse the catalog, search
+   records, and check `/api/v1/registries` and the public export.
 
 Startup applies checksum-verified, advisory-locked migrations before Next.js
 accepts traffic. `CIVIC_REGISTRY_SEED_GENERIC=true` installs the example only
@@ -46,13 +55,13 @@ retired and ignored.
 
 ## Free plan limits
 
-The Blueprint keeps the existing free Render web service, which sleeps when
-idle and uses an ephemeral filesystem. The database reuses the existing Neon
-project on its current account plan; normal Neon usage billing applies. The
-`render-live` compute is capped at 0.25 CU and suspends after five idle minutes.
-It does not have Render Free Postgres's 30-day expiry. Arrange tested backups
-and monitor database usage. The example requires no stored attachment files. Before enabling fetched PDF storage, attach a
-persistent disk on a compatible paid service and set
+The free Render web service sleeps when idle, so the first request after a
+quiet period is slow, and its filesystem is ephemeral. The Neon project uses
+the campaign organization's free plan; check its storage and compute-hour
+allowances and its point-in-time restore window before relying on it, and
+arrange tested logical backups for anything beyond fictional example data. The
+example requires no stored attachment files. Before enabling fetched PDF
+storage, attach a persistent disk on a compatible paid service and set
 `CIVIC_REGISTRY_DOCUMENT_STORAGE_DIR` to its mount, or implement durable object
 storage. Database metadata alone does not preserve files after a restart.
 
