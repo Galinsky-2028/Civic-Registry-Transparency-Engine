@@ -7,7 +7,7 @@ import {
 import { Breadcrumbs } from "../../../../../../components/breadcrumbs";
 import { EvidenceGroups } from "../../../../../../components/evidence-groups";
 import {
-  getPublicEvidence,
+  getPublicEvidenceWithContent,
   getPublicRecord,
   getPublicRegistry,
 } from "../../../../../../lib/public-registry";
@@ -59,10 +59,11 @@ export default async function EvidencePage({
     record,
     registry.config,
   );
-  const evidence = await getPublicEvidence(
-    registry.config,
-    record,
-  );
+  const { evidence, contentDocumentIds } =
+    await getPublicEvidenceWithContent(
+      registry.config,
+      record,
+    );
 
   const recordPath = `/registries/${encodeURIComponent(
     registryId,
@@ -113,7 +114,13 @@ export default async function EvidencePage({
         </div>
 
         {evidence.groups.length > 0 ? (
-          <EvidenceGroups groups={evidence.groups} />
+          <EvidenceGroups
+            groups={evidence.groups}
+            contentBasePath={`/api/v1/registries/${encodeURIComponent(
+              registryId,
+            )}/records/${encodeURIComponent(recordId)}/documents`}
+            contentDocumentIds={contentDocumentIds}
+          />
         ) : (
           <div className="empty-state empty-state--inline">
             <h3>No public evidence citations yet</h3>

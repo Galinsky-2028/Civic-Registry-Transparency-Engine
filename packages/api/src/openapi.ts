@@ -266,6 +266,49 @@ export function buildPublicApiOpenApiDocument(
             tags: ["Evidence"],
           },
         },
+      "/registries/{registryId}/records/{recordId}/documents/{documentId}/content":
+        {
+          get: {
+            summary:
+              "Download the archived public copy of a document cited by a public record. Redacted documents return only the reviewed redacted copy; withheld or unarchived documents return 404.",
+            parameters: [
+              registryIdParameter,
+              recordIdParameter,
+              {
+                name: "documentId",
+                in: "path",
+                required: true,
+                schema: {
+                  type: "string",
+                },
+              },
+            ],
+            responses: {
+              "200": {
+                description:
+                  "Integrity-verified document bytes served as an attachment.",
+                content: {
+                  "application/pdf": {
+                    schema: {
+                      type: "string",
+                      format: "binary",
+                    },
+                  },
+                  "application/octet-stream": {
+                    schema: {
+                      type: "string",
+                      format: "binary",
+                    },
+                  },
+                },
+              },
+              "404": {
+                $ref: "#/components/responses/NotFound",
+              },
+            },
+            tags: ["Evidence"],
+          },
+        },
       "/registries/{registryId}/records/{recordId}/history":
         {
           get: {

@@ -42,6 +42,79 @@ import {
   PostgresIntegrityService,
   type SignedIntegrityCheckpoint,
 } from "./integrity.ts";
+import { PostgresPdfAttachmentService } from "./attachments.ts";
+import { createDocumentStorage } from "./document-content.ts";
+
+/**
+ * Retrieve public PDF attachments for one record through the hardened source
+ * client into configured durable storage, with extraction and citations.
+ * Usage: ingest-attachments <registry-id> <record-id> <host[,host]> <url>...
+ * Set CIVIC_REGISTRY_ATTACHMENT_VISIBILITY=private to keep citations private.
+ */
+async function ingestAttachments(args: string[]): Promise<void> {
+  const [registryId, recordId, hosts, ...urls] = args;
+  if (!registryId || !recordId || !hosts || urls.length === 0) {
+    throw new Error(
+      "Usage: ingest-attachments <registry-id> <record-id> <allowed-host[,host]> <https-url>...",
+    );
+  }
+  const allowedHosts = hosts
+    .split(",")
+    .map((host) => host.trim().toLowerCase())
+    .filter(Boolean);
+  const visibility =
+    process.env.CIVIC_REGISTRY_ATTACHMENT_VISIBILITY === "private"
+      ? "private"
+      : "public";
+  const pool = createDatabasePool();
+  try {
+    const record = await pool.query<{ fields: Record<string, unknown> }>(
+      `SELECT fields
+       FROM civic_registry_records
+       WHERE registry_id = $1 AND id = $2`,
+      [registryId, recordId],
+    );
+    if (!record.rows[0]) {
+      throw new Error(`Record ${recordId} does not exist in ${registryId}.`);
+    }
+    const title = record.rows[0].fields.title;
+    const service = new PostgresPdfAttachmentService(
+      pool,
+      createDocumentStorage(pool),
+    );
+    const result = await service.ingest({
+      registryId,
+      recordId,
+      recordTitle: typeof title === "string" && title.trim() ? title.trim() : recordId,
+      attachmentUrls: urls,
+      allowedHosts,
+      visibility,
+    });
+    console.log(
+      JSON.stringify(
+        {
+          command: "ingest-attachments",
+          created: result.created,
+          existing: result.existing,
+          failed: result.failed,
+          items: result.items.map((item) => ({
+            url: item.url,
+            status: item.status,
+            documentId: item.documentId,
+            storageKey: item.storageKey,
+            pageCount: item.pageCount,
+            error: item.error,
+          })),
+        },
+        null,
+        2,
+      ),
+    );
+    if (result.failed > 0) process.exitCode = 1;
+  } finally {
+    await pool.end();
+  }
+}
 
 async function migrate(): Promise<void> {
   const pool = createDatabasePool();
@@ -701,6 +774,11 @@ async function main(): Promise<void> {
     return;
   }
 
+  if (command === "ingest-attachments") {
+    await ingestAttachments(args);
+    return;
+  }
+
   if (command === "notifications-run") {
     await runNotifications(args[0]);
     return;
@@ -725,7 +803,7 @@ async function main(): Promise<void> {
   }
 
   throw new Error(
-    "Usage: node packages/database/src/cli.ts <migrate|seed|reindex|publish-due|reconcile-deadlines|ingest|notifications-run|integrity-verify|integrity-checkpoint> [arguments]",
+    "Usage: node packages/database/src/cli.ts <migrate|seed|reindex|publish-due|reconcile-deadlines|ingest|ingest-attachments|notifications-run|integrity-verify|integrity-checkpoint> [arguments]",
   );
 }
 

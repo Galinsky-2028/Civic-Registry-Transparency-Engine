@@ -1,7 +1,11 @@
 import {
   mkdir,
+  link,
+  readFile,
+  unlink,
   writeFile,
 } from "node:fs/promises";
+import { createHash, randomUUID } from "node:crypto";
 import {
   dirname,
   join,
@@ -49,6 +53,21 @@ function safeExtension(
   return normalized;
 }
 
+/** Content-addressed key shared by every storage backend. */
+export function documentStorageKey(sha256: string, extension: string): string {
+  const hash = safeHash(sha256);
+  return posix.join("sha256", hash.slice(0, 2), hash + "." + safeExtension(extension));
+}
+
+/** Parses and validates a content-addressed key; returns its SHA-256. */
+export function parseDocumentStorageKey(storageKey: string): { sha256: string; extension: string } {
+  const match = /^sha256\/([a-f0-9]{2})\/([a-f0-9]{64})\.([a-z0-9]{1,12})$/.exec(storageKey);
+  if (!match || match[2]!.slice(0, 2) !== match[1]) {
+    throw new Error("Invalid document storage key.");
+  }
+  return { sha256: match[2]!, extension: match[3]! };
+}
+
 export class FileSystemDocumentStorage
   implements DocumentStorage
 {
@@ -74,18 +93,14 @@ export class FileSystemDocumentStorage
     const sha256 = safeHash(
       input.sha256,
     );
+    if (createHash("sha256").update(input.data).digest("hex") !== sha256) {
+      throw new Error("Document bytes do not match the supplied SHA-256.");
+    }
     const extension =
       safeExtension(
         input.extension,
       );
-    const storageKey =
-      posix.join(
-        "sha256",
-        sha256.slice(0, 2),
-        sha256 +
-          "." +
-          extension,
-      );
+    const storageKey = documentStorageKey(sha256, extension);
     const absolutePath =
       join(
         this.rootDirectory,
@@ -99,14 +114,17 @@ export class FileSystemDocumentStorage
       },
     );
 
+    const temporaryPath = absolutePath + "." + randomUUID() + ".tmp";
     try {
       await writeFile(
-        absolutePath,
+        temporaryPath,
         input.data,
         {
           flag: "wx",
         },
       );
+      // Publish complete bytes atomically; concurrent retries never read a partial write.
+      await link(temporaryPath, absolutePath);
     } catch (error) {
       if (
         !(
@@ -118,6 +136,14 @@ export class FileSystemDocumentStorage
       ) {
         throw error;
       }
+      const existing = await readFile(absolutePath);
+      if (createHash("sha256").update(existing).digest("hex") !== sha256) {
+        throw new Error("Stored document failed SHA-256 integrity verification.");
+      }
+    } finally {
+      await unlink(temporaryPath).catch((error: NodeJS.ErrnoException) => {
+        if (error.code !== "ENOENT") throw error;
+      });
     }
 
     return {
@@ -125,5 +151,20 @@ export class FileSystemDocumentStorage
       byteLength:
         input.data.byteLength,
     };
+  }
+
+  async get(storageKey: string): Promise<Uint8Array | null> {
+    const { sha256 } = parseDocumentStorageKey(storageKey);
+    let data: Buffer;
+    try {
+      data = await readFile(join(this.rootDirectory, ...storageKey.split("/")));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+      throw error;
+    }
+    if (createHash("sha256").update(data).digest("hex") !== sha256) {
+      throw new Error("Stored document failed SHA-256 integrity verification.");
+    }
+    return new Uint8Array(data);
   }
 }

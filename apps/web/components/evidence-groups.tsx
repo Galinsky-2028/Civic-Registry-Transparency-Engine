@@ -24,10 +24,16 @@ function EvidenceLink({
 export function EvidenceGroups({
   groups,
   limitPerGroup,
+  contentBasePath,
+  contentDocumentIds = [],
 }: {
   groups: PresentedCitationGroup[];
   limitPerGroup?: number;
+  /** Public API path under which archived document copies are served. */
+  contentBasePath?: string;
+  contentDocumentIds?: string[];
 }) {
+  const archived = new Set(contentDocumentIds);
   return (
     <div className="evidence-groups">
       {groups.map((group) => {
@@ -67,6 +73,17 @@ export function EvidenceGroups({
                           {citation.document.title}
                         </EvidenceLink>
                       </h4>
+                      {contentBasePath &&
+                      archived.has(citation.document.id) ? (
+                        <a
+                          href={`${contentBasePath}/${encodeURIComponent(
+                            citation.document.id,
+                          )}/content`}
+                          download
+                        >
+                          Download archived copy
+                        </a>
+                      ) : null}
                     </div>
                   ) : citation.source ? (
                     <div className="evidence-card__primary">

@@ -17,6 +17,7 @@ const nextConfig = {
     "@civic-registry/core",
     "@civic-registry/config",
     "@civic-registry/database",
+    "@civic-registry/documents",
     "@civic-registry/registry",
     "@civic-registry/search",
   ],

@@ -207,3 +207,19 @@ DNS-validated public address with original TLS identity, rejects private and
 transition address forms, and bounds DNS time and response size. Unit tests
 cover each denial path. Independent human review remains deferred under the
 owner policy.
+
+## CRT-25 — Durable PostgreSQL document storage and public archived copies
+
+Owner-requested on November 16, 2026. Retrieved document evidence must survive
+restarts on hosts without persistent disks, and the public must be able to
+obtain the copy the disclosure policy allows. Canonical PR mapping lives only
+in `registry/prs.json`.
+
+Acceptance: content-addressed document bytes are stored immutably in
+PostgreSQL by default with SHA-256 verification on every write and read and a
+per-document size limit; filesystem storage requires an explicit durable
+directory; an operator command retrieves attachments for a record through the
+hardened source client; a public endpoint serves only the disclosed original
+or reviewed redacted copy of a document cited by a public record and returns
+404 for withheld, uncited or unarchived documents. Integration tests cover
+integrity, tampering, immutability and the disclosure matrix.

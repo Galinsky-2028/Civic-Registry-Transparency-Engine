@@ -60,10 +60,9 @@ quiet period is slow, and its filesystem is ephemeral. The Neon project uses
 the campaign organization's free plan; check its storage and compute-hour
 allowances and its point-in-time restore window before relying on it, and
 arrange tested logical backups for anything beyond fictional example data. The
-example requires no stored attachment files. Before enabling fetched PDF
-storage, attach a persistent disk on a compatible paid service and set
-`CIVIC_REGISTRY_DOCUMENT_STORAGE_DIR` to its mount, or implement durable object
-storage. Database metadata alone does not preserve files after a restart.
+example requires no stored attachment files. Fetched documents are stored in
+PostgreSQL by default, so they survive restarts on the free plan; they count
+against the Neon storage allowance (see [PDF attachments](PDF-ATTACHMENTS.md)).
 
 Email delivery requires an email relay and sender configuration. Source-refresh,
 scheduled publication, deadline reconciliation, and notification processing

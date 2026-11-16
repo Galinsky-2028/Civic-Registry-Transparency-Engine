@@ -2,7 +2,7 @@
   "repository": "Galinsky-2028/Civic-Registry-Transparency-Engine",
   "title": "Civic-Registry-Transparency-Engine",
   "planVerified": true,
-  "plannedPrCount": 24,
+  "plannedPrCount": 25,
   "sourceFiles": [
     "docs/DEVELOPMENT_PLAN.md",
     "docs/ROADMAP_STATUS.md"
@@ -291,6 +291,21 @@
       "externalDependencies": [],
       "externalPrerequisites": [],
       "scope": "Owner-requested generalization of downstream-verified hardening: server-configured administrator principals with revocable signed sessions, deployment role separation, explicit review decisions, and DNS-pinned public source retrieval."
+    },
+    {
+      "id": "CRT-25",
+      "title": "Durable PostgreSQL document storage and public archived copies",
+      "origin": "addition",
+      "prs": [
+        35
+      ],
+      "dependsOn": [
+        "CRT-20",
+        "CRT-24"
+      ],
+      "externalDependencies": [],
+      "externalPrerequisites": [],
+      "scope": "Owner-requested completion of document evidence for hosts without persistent disks: immutable content-addressed PostgreSQL storage, a retrieval command, and disclosure-filtered public archived copies."
     }
   ],
   "pullRequests": [
