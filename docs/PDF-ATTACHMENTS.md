@@ -51,7 +51,7 @@ PDF signature.
 
 ## Content-addressed storage
 
-The filesystem implementation stores documents under:
+Every backend uses the same content-addressed key:
 
 ```text
 sha256/<first-two-hash-characters>/<full-sha256>.pdf
@@ -60,13 +60,38 @@ sha256/<first-two-hash-characters>/<full-sha256>.pdf
 Repeated identical bytes are idempotent. Changed bytes at the same source URL
 create a new immutable document version while preserving earlier evidence.
 
-Configure the local storage root with:
+Two backends are provided, selected by `createDocumentStorage(pool)`:
+
+- **PostgreSQL** (default, `CIVIC_REGISTRY_DOCUMENT_STORAGE=postgres`):
+  immutable rows in `civic_registry_document_content` (migration 0014), with
+  constraints binding key, digest and length, a 25 MiB per-document limit, and
+  SHA-256 verification on every write and read. Suitable for hosts without a
+  persistent disk; storage counts against the database plan.
+- **Filesystem** (`CIVIC_REGISTRY_DOCUMENT_STORAGE=filesystem` plus
+  `CIVIC_REGISTRY_DOCUMENT_STORAGE_DIR=/persistent/path`): atomic,
+  integrity-checked files. The directory must be on durable storage.
+
+## Command line
 
 ```bash
-CIVIC_REGISTRY_DOCUMENT_STORAGE_DIR=/persistent/path
+pnpm db:ingest-attachments <registry-id> <record-id> <allowed-host[,host]> <https-url>...
 ```
 
-Production deployments using filesystem storage must mount durable storage.
+Retrieves the listed PDFs for one existing record through the hardened public
+source client (HTTPS, allowlisted hosts, DNS-pinned connections, size limits),
+stores them with the configured backend, extracts text and creates public
+citations (`CIVIC_REGISTRY_ATTACHMENT_VISIBILITY=private` keeps them private).
+It prints per-URL results and exits non-zero if any attachment failed.
+
+## Public archived copies
+
+`GET /api/v1/registries/{registryId}/records/{recordId}/documents/{documentId}/content`
+serves the stored bytes of a document cited by a public record, under the same
+disclosure filtering as the evidence endpoint: disclosed documents return the
+original, redacted documents return only the reviewed redacted copy
+(`publicStorageKey`), and withheld, uncited or unarchived documents return 404.
+Responses are attachments with `nosniff`, a sandbox Content-Security-Policy and
+the SHA-256 as ETag. The public evidence page links to the copy when one exists.
 
 ## Evidence model
 

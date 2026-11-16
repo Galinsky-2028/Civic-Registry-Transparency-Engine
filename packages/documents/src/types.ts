@@ -9,6 +9,11 @@ export interface DocumentStorage {
     extension: string;
     data: Uint8Array;
   }): Promise<StoredDocument>;
+  /**
+   * Returns integrity-verified bytes for a key produced by put, or null when
+   * the key is unknown. Implementations must never return unverified bytes.
+   */
+  get?(storageKey: string): Promise<Uint8Array | null>;
 }
 
 export interface ExtractedDocumentPage {

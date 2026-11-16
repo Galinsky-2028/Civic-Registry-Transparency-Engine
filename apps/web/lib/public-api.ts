@@ -18,6 +18,7 @@ import type {
 
 import {
   getPublicDeadlines,
+  getPublicDocumentContentKey,
   getPublicEvidence,
   getPublicHistory,
   getPublicRecordView,
@@ -27,6 +28,11 @@ import {
   listPublicRelationships,
   searchPublicRecords,
 } from "./public-registry.ts";
+import { getDatabasePool } from "./database.ts";
+import {
+  createDocumentStorage,
+  parseDocumentStorageKey,
+} from "@civic-registry/database";
 import {
   parsePublicSearchRequest,
   type PublicSearchParams,
@@ -375,6 +381,91 @@ export async function handleApiEvidence(
     disclosure: recordView.disclosure,
     evidence,
   });
+}
+
+/**
+ * Streams the publicly releasable bytes of a document cited by a public
+ * record. Withheld, uncited or unstored documents return 404; redacted
+ * documents serve only the reviewed redacted copy.
+ */
+export async function handleApiDocumentContent(
+  registryId: string,
+  recordId: string,
+  documentId: string,
+): Promise<Response> {
+  const [registry, recordView] =
+    await Promise.all([
+      getPublicRegistry(registryId),
+      getPublicRecordView(
+        registryId,
+        recordId,
+      ),
+    ]);
+
+  if (!registry || !recordView) {
+    return publicApiError(
+      404,
+      "record_not_found",
+      "The requested public record does not exist.",
+    );
+  }
+
+  const storageKey =
+    await getPublicDocumentContentKey(
+      registry.config,
+      recordView.record,
+      documentId,
+    );
+  let parsed: { sha256: string; extension: string } | null = null;
+  try {
+    parsed = storageKey ? parseDocumentStorageKey(storageKey) : null;
+  } catch {
+    // Keys that are not content-addressed (for example external locations
+    // recorded by reviewers) have no archived bytes to serve.
+    parsed = null;
+  }
+  const storage = createDocumentStorage(
+    getDatabasePool(),
+  );
+  const bytes =
+    storageKey && parsed && storage.get
+      ? await storage.get(storageKey)
+      : null;
+
+  if (!parsed || !bytes) {
+    return publicApiError(
+      404,
+      "document_content_not_available",
+      "No public copy of this document is available.",
+    );
+  }
+
+  const { sha256, extension } = parsed;
+  const fileName =
+    documentId.replace(/[^A-Za-z0-9._-]/g, "_").slice(0, 120) +
+    "." +
+    extension;
+
+  return new Response(
+    new Blob([bytes as Uint8Array<ArrayBuffer>]),
+    {
+      status: 200,
+      headers: headers({
+        "Content-Type":
+          extension === "pdf"
+            ? "application/pdf"
+            : "application/octet-stream",
+        "Content-Length": String(bytes.byteLength),
+        "Content-Disposition":
+          `attachment; filename="${fileName}"`,
+        "Content-Security-Policy":
+          "sandbox; default-src 'none'",
+        "X-Content-Type-Options": "nosniff",
+        "Cache-Control": "public, max-age=300",
+        ETag: `"${sha256}"`,
+      }),
+    },
+  );
 }
 
 export async function handleApiHistory(

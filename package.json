@@ -27,6 +27,7 @@
     "db:integrity-verify": "node packages/database/src/cli.ts integrity-verify",
     "db:integrity-checkpoint": "node packages/database/src/cli.ts integrity-checkpoint",
     "start": "sh scripts/render-start.sh",
-    "db:bootstrap": "node packages/database/src/bootstrap.ts"
+    "db:bootstrap": "node packages/database/src/bootstrap.ts",
+    "db:ingest-attachments": "node packages/database/src/cli.ts ingest-attachments"
   }
 }
